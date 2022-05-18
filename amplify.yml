@@ -1,0 +1,32 @@
+version: 1
+applications:
+  - appRoot: apps/nextjs-app
+    backend:
+      phases:
+        build:
+          commands:
+            - amplifyPush --simple
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            # This step will build app with Nx framework
+            - cd ../../
+            - yarn install
+        build:
+          commands:
+            - yarn workspace nextjs-app build
+            - yarn workspaces focus nextjs-app --production
+            - cd apps/nextjs-app
+            # create symbolic link from root to app folder
+            - ln -s ../../apps/nextjs-app/.next .next
+            - ln -s ../../node_modules node_modules
+            # enable SSR build flag to transpile libs/ui
+            - export AMPLIFY_SSR_BUILD=true
+      artifacts:
+        baseDirectory: ../../apps/nextjsapp/.next
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**/*
